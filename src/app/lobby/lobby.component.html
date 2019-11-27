@@ -1,0 +1,10 @@
+<div>
+  <p *ngIf="joinUrl">
+    Ok friend, now just copy the link below and give it to your bud.  Then you can have a chat!
+  </p>
+  <input id="join-link-input" type="text" size="80" [value]="joinUrl || ''" />
+  <button (click)="copyLink()">Copy</button>
+  <span id="join-link-feedback">Copied!</span>
+</div>
+
+<button class="host" (click)="host()">Host</button>

@@ -2,6 +2,7 @@ import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {MessageService} from '../messages/message.service';
 import {User} from '../messages/author.model';
 import {Message} from '../messages/message.model';
+import {ActivatedRoute} from '@angular/router';
 
 @Component({
   selector: 'cm-chat-view',
@@ -17,7 +18,9 @@ export class ChatViewComponent implements OnInit {
   messages: Array<Message>;
   message = '';
 
-  constructor(private messageService: MessageService, private cdRef: ChangeDetectorRef) {
+  constructor(private messageService: MessageService,
+              private route: ActivatedRoute,
+              private cdRef: ChangeDetectorRef) {
     this.messages = new Array<Message>();
   }
 

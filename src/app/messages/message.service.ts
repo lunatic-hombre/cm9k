@@ -1,8 +1,9 @@
 import {Injectable} from '@angular/core';
-import {PeerChannel, WebRTCService} from '../webrtc/webrtc.service';
+import {PeerChannel, SelfWebRTCService} from '../webrtc/self-webrtc.service';
 import {Message} from './message.model';
 import {User} from './author.model';
 import {Observable, Subject} from 'rxjs';
+import {WebRTCService} from '../webrtc/webrtc.service';
 
 enum EventType {
   MESSAGE, JOIN, DROP
@@ -13,12 +14,14 @@ enum EventType {
 })
 export class MessageService {
 
+  rtc: WebRTCService;
   channel: PeerChannel;
   messages: Subject<Message>;
   joins: Subject<User>;
   drops: Subject<User>;
 
-  constructor(private rtc: WebRTCService) {
+  constructor() {
+    this.rtc = new SelfWebRTCService();
     this.messages = new Subject<Message>();
     this.joins = new Subject<User>();
     this.drops = new Subject<User>();

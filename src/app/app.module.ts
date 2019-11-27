@@ -5,11 +5,13 @@ import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {ChatViewComponent} from './chat-view/chat-view.component';
 import {FormsModule} from '@angular/forms';
+import { LobbyComponent } from './lobby/lobby.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    ChatViewComponent
+    ChatViewComponent,
+    LobbyComponent
   ],
   imports: [
     BrowserModule,
