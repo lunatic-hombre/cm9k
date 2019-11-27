@@ -1,5 +1,7 @@
 import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
-import {PeerChannel, WebRTCService} from '../webrtc/webrtc.service';
+import {MessageService} from '../messaging/message.service';
+import {User} from '../messaging/author.model';
+import {Message} from '../messaging/message.model';
 
 @Component({
   selector: 'cm-chat-view',
@@ -8,28 +10,33 @@ import {PeerChannel, WebRTCService} from '../webrtc/webrtc.service';
 })
 export class ChatViewComponent implements OnInit {
 
-  channel: PeerChannel;
-  messages: Array<string>;
+  me: User = {
+    name: 'anonymous'
+  };
+
+  messages: Array<Message>;
   message = '';
 
-  constructor(private rtc: WebRTCService, private cdRef: ChangeDetectorRef) {
-    this.messages = new Array<string>();
+  constructor(private messageService: MessageService, private cdRef: ChangeDetectorRef) {
+    this.messages = new Array<Message>();
   }
 
   ngOnInit() {
-    this.rtc.connect().then(c => {
-      this.channel = c;
-      this.channel.inbound().subscribe(msg => {
-        console.log('receive', msg);
-        this.messages.push(msg);
-        this.cdRef.detectChanges();
-      });
-    }).catch(err => console.error('Connection failure', err));
+    this.messageService.connect(this.me)
+      .then(() => {
+        console.log('Connected to peer!');
+        this.messageService.onMessage().subscribe(msg => {
+          console.log('Message recieved', msg);
+          this.messages.push(msg);
+          this.cdRef.detectChanges();
+        });
+      })
+      .catch(err => console.error('Connection failure!', err));
   }
 
   send() {
     console.log('send', this.message);
-    this.channel.send(this.message);
+    this.messageService.send(new Message(this.me, this.message));
     this.message = '';
   }
 

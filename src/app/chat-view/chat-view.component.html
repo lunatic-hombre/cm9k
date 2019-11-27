@@ -1,6 +1,6 @@
 <div class="chat-view">
   <ul class="messages">
-    <li *ngFor="let m of messages" [innerText]="m"></li>
+    <li *ngFor="let m of messages" [innerText]="m.text"></li>
   </ul>
   <form class="send-form" #sendForm="ngForm" (ngSubmit)="send()">
     <textarea name="message"
