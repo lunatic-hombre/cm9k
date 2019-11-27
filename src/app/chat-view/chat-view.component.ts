@@ -36,8 +36,14 @@ export class ChatViewComponent implements OnInit {
 
   send() {
     console.log('send', this.message);
-    this.messageService.send(new Message(this.me, this.message));
+    this.messageService.send(new Message(this.me, {name: 'random_receiver'} , this.message));
     this.message = '';
   }
 
+}
+
+export interface MessageObject {
+  sender: string;
+  receiver: string;
+  text: string;
 }

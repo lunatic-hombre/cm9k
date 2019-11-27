@@ -1,12 +1,31 @@
-<div class="chat-view">
-  <ul class="messages">
-    <li *ngFor="let m of messages" [innerText]="m.text"></li>
-  </ul>
-  <form class="send-form" #sendForm="ngForm" (ngSubmit)="send()">
-    <textarea name="message"
-              [(ngModel)]="message"
-              (keydown.enter)="$event.preventDefault(); send()">
-    </textarea>
-    <input class="send-button" type="submit" value="Send" />
-  </form>
-</div>
+
+
+<div class="container">
+    <input [(ngModel)]="me.name" />
+    <div class="messaging">
+          <div class="inbox_msg">
+            <div class="mesgs">
+              <div class="msg_history" #scrollMe [scrollTop]="scrollMe.scrollHeight">
+                  <div [ngClass]="(m.author.name==me.name)?'outgoing_msg':'incoming_msg'" *ngFor="let m of messages">
+                      <div *ngIf="m.author.name!==me.name" class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt=""> </div>
+                      <div class="msg">
+                        <p [innerText]="m.text"></p>
+                        <span class="time_date"> 11:01 AM    |    June 9</span> </div>
+                    </div>
+                    
+              </div>
+              <div class="type_msg">
+                <div class="input_msg_write">
+                  <input type="text" class="write_msg" placeholder="Type a message" 
+                  [(ngModel)]="message"
+                  (keydown.enter)="$event.preventDefault(); send()"
+                  />
+                  <button 
+                  (click)="send()"
+                  class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div></div>
