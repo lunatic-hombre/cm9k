@@ -30,8 +30,12 @@ export class WebRTCService {
   connect(): Promise<PeerChannel> {
     try {
       // Connecting
-      const localConnection = new RTCPeerConnection();
-      const remoteConnection = new RTCPeerConnection();
+      const localConnection = new RTCPeerConnection({
+        iceServers
+      });
+      const remoteConnection = new RTCPeerConnection({
+        iceServers
+      });
       localConnection.onicecandidate = e => !e.candidate
         || remoteConnection.addIceCandidate(e.candidate)
           .catch(err => console.error('Failed to connect ICE candidate', err));

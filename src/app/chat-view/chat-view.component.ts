@@ -1,7 +1,7 @@
 import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
-import {MessageService} from '../messaging/message.service';
-import {User} from '../messaging/author.model';
-import {Message} from '../messaging/message.model';
+import {MessageService} from '../messages/message.service';
+import {User} from '../messages/author.model';
+import {Message} from '../messages/message.model';
 
 @Component({
   selector: 'cm-chat-view',
@@ -26,7 +26,6 @@ export class ChatViewComponent implements OnInit {
       .then(() => {
         console.log('Connected to peer!');
         this.messageService.onMessage().subscribe(msg => {
-          console.log('Message recieved', msg);
           this.messages.push(msg);
           this.cdRef.detectChanges();
         });
