@@ -1,7 +1,7 @@
 import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
-import {MessageService} from '../messaging/message.service';
-import {User} from '../messaging/author.model';
-import {Message} from '../messaging/message.model';
+import {MessageService} from '../../messaging/message.service';
+import {User} from '../../messaging/author.model';
+import {Message} from '../../messaging/message.model';
 
 @Component({
   selector: 'cm-chat-view',
@@ -36,6 +36,7 @@ export class ChatViewComponent implements OnInit {
 
   send() {
     console.log('send', this.message);
+    if (this.message === '') { return; }
     this.messageService.send(new Message(this.me, {name: 'random_receiver'} , this.message));
     this.message = '';
   }

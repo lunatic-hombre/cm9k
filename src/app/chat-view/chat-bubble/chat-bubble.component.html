@@ -1,0 +1,22 @@
+<div *ngIf="received; else otherContent">
+		<div class="d-flex justify-content-start mb-4">
+				<div class="img_cont_msg">
+				  <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" class="rounded-circle user_img_msg">
+				</div>
+				<div class="msg_cotainer">
+						{{message.text}}
+				  <span class="msg_time">9:00 AM, Today</span>
+				</div>
+			  </div>
+</div>
+<ng-template #otherContent>
+		<div class="d-flex justify-content-end mb-4">
+				<div class="msg_cotainer_send">
+						{{message.text}}
+				  <span class="msg_time_send">9:05 AM, Today</span>
+				</div>
+				<div class="img_cont_msg">
+			  <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" class="rounded-circle user_img_msg">
+				</div>
+			  </div>
+</ng-template>
