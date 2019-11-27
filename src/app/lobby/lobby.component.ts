@@ -9,14 +9,14 @@ import {PeerWebRTCService} from '../webrtc/peer-webrtc.service';
 export class LobbyComponent {
 
   joinUrl: string;
-  state: 'fresh' | 'waiting' = 'fresh';
+  state: 'fresh' | 'copying' | 'waiting' = 'fresh';
 
   constructor(private rtc: PeerWebRTCService) { }
 
   host(): void {
     this.rtc.host().then(peerChannel => {
       this.joinUrl = this.makeJoinUrl(peerChannel);
-      this.state = 'waiting';
+      this.state = 'copying';
       // ON ANSWER?
     });
   }
@@ -37,7 +37,11 @@ export class LobbyComponent {
     setTimeout(() => {
       callout.classList.remove('visible');
       joinLinkInput.blur();
-    }, 1000);
+      this.state = 'waiting';
+    }, 700);
   }
 
+  answer(value: string) {
+
+  }
 }

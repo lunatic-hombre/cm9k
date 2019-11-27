@@ -2,9 +2,13 @@
   <p *ngIf="joinUrl">
     Ok friend, now just copy the link below and give it to your bud.  Then you can have a chat!
   </p>
-  <input id="join-link-input" type="text" size="80" [value]="joinUrl || ''" />
-  <button (click)="copyLink()">Copy</button>
+  <input id="join-link-input" type="text" size="60" [value]="joinUrl || ''" />
+  <button *ngIf="joinUrl" (click)="copyLink()">Copy</button>
+  <button *ngIf="!joinUrl" class="host" (click)="host()">Host</button>
   <span id="join-link-feedback">Copied!</span>
 </div>
 
-<button class="host" (click)="host()">Host</button>
+<div *ngIf="state === 'waiting'">
+  <p>Now get an answer from your buddy...</p>
+  <input id="answer-input" type="text" size="60" placeholder="place answer here" />
+</div>

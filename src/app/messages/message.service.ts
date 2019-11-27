@@ -4,6 +4,7 @@ import {Message} from './message.model';
 import {User} from './author.model';
 import {Observable, Subject} from 'rxjs';
 import {WebRTCService} from '../webrtc/webrtc.service';
+import {PeerWebRTCService} from '../webrtc/peer-webrtc.service';
 
 enum EventType {
   MESSAGE, JOIN, DROP
@@ -14,21 +15,21 @@ enum EventType {
 })
 export class MessageService {
 
-  rtc: WebRTCService;
+  rtc: PeerWebRTCService;
   channel: PeerChannel;
   messages: Subject<Message>;
   joins: Subject<User>;
   drops: Subject<User>;
 
   constructor() {
-    this.rtc = new SelfWebRTCService();
+    this.rtc = new PeerWebRTCService();
     this.messages = new Subject<Message>();
     this.joins = new Subject<User>();
     this.drops = new Subject<User>();
   }
 
-  connect(user: User): Promise<void> {
-    return this.rtc.connect().then(c => {
+  connect(user: User, code: string): Promise<void> {
+    return this.rtc.join(code).then(c => {
       this.channel = c;
       this.channel.inbound().subscribe(str => {
         console.log('receive ', str);

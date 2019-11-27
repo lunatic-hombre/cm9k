@@ -25,15 +25,19 @@ export class ChatViewComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.messageService.connect(this.me)
-      .then(() => {
-        console.log('Connected to peer!');
-        this.messageService.onMessage().subscribe(msg => {
-          this.messages.push(msg);
-          this.cdRef.detectChanges();
-        });
-      })
-      .catch(err => console.error('Connection failure!', err));
+
+    this.route.paramMap.subscribe(params => {
+      const code = params.get('code');
+      this.messageService.connect(this.me, code)
+        .then(() => {
+          console.log('Connected to peer!');
+          this.messageService.onMessage().subscribe(msg => {
+            this.messages.push(msg);
+            this.cdRef.detectChanges();
+          });
+        })
+        .catch(err => console.error('Connection failure!', err));
+    });
   }
 
   send() {

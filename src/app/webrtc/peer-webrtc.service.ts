@@ -24,6 +24,7 @@ export interface PeerChannel {
 }
 
 const DATA_CHANNEL_LABEL = 'TEST CHANNEL 123';
+const DATA_CHANNEL_ID = 0;
 
 @Injectable({
   providedIn: 'root'
@@ -32,38 +33,22 @@ export class PeerWebRTCService {
 
   host(): Promise<PeerChannel> {
     try {
-      // Connecting
-      const connection = new RTCPeerConnection({
-        iceServers
-      });
+      const {connection, stateChangeSubject, messageSubject, channel} = this.connect();
 
-      const stateChangeSubject = new Subject<ChannelState>();
-
-      // Sending
-      const sendChannel = connection.createDataChannel(DATA_CHANNEL_LABEL);
-      sendChannel.onopen = () => stateChangeSubject.next(ChannelState.OPEN);
-      sendChannel.onclose = () => stateChangeSubject.next(ChannelState.CLOSED);
-
-      // Receiving
-      const inboundMessageSubject = new Subject<string>();
-      connection.ondatachannel = (event: RTCDataChannelEvent) => {
-        const receiveChannel = event.channel;
-        receiveChannel.onmessage = (e: MessageEvent) => inboundMessageSubject.next(e.data);
-        receiveChannel.onopen = () => stateChangeSubject.next(ChannelState.OPEN);
-        receiveChannel.onclose = () => stateChangeSubject.next(ChannelState.CLOSED);
+      connection.onicecandidate = e => {
+        console.log(e);
       };
 
-      // Bundle into interface
       return connection.createOffer()
         .then(offer => {
           connection.setLocalDescription(offer).then(() => console.log('Set local description.', connection.localDescription));
           return {
             desc: btoa(JSON.stringify(offer)),
             send(message: string): void {
-              sendChannel.send(message);
+              channel.send(message);
             },
             inbound(): Observable<string> {
-              return inboundMessageSubject;
+              return messageSubject;
             },
             state(): Observable<ChannelState> {
               return stateChangeSubject;
@@ -77,33 +62,19 @@ export class PeerWebRTCService {
 
   join(code: string): Promise<PeerChannel> {
     try {
-      // Connecting
-      const connection = new RTCPeerConnection({
-        iceServers
-      });
-      const stateChangeSubject = new Subject<ChannelState>();
-      let channel: RTCDataChannel = null;
+      const {connection, stateChangeSubject, messageSubject, channel} = this.connect();
+      const remoteDesc = JSON.parse(atob(code));
 
-      // Receiving
-      const inboundMessageSubject = new Subject<string>();
-      connection.ondatachannel = (event: RTCDataChannelEvent) => {
-        channel = event.channel;
-        channel.onmessage = (e: MessageEvent) => inboundMessageSubject.next(e.data);
-        channel.onopen = () => stateChangeSubject.next(ChannelState.OPEN);
-        channel.onclose = () => stateChangeSubject.next(ChannelState.CLOSED);
-      };
-
-      // Bundle into interface
-      const offer = JSON.parse(atob(code));
-      return connection.setRemoteDescription(offer)
+      return connection.setRemoteDescription(remoteDesc)
         .then(() => connection.createAnswer())
+        .then(localDesc => connection.setLocalDescription(localDesc))
         .then(() => ({
           desc: code,
           send(message: string): void {
             channel.send(message);
           },
           inbound(): Observable<string> {
-            return inboundMessageSubject;
+            return messageSubject;
           },
           state(): Observable<ChannelState> {
             return stateChangeSubject;
@@ -112,6 +83,26 @@ export class PeerWebRTCService {
     } catch (e) {
       return Promise.reject(e);
     }
+  }
+
+  private connect() {
+    const connection = new RTCPeerConnection({
+      iceServers
+    });
+    const stateChangeSubject = new Subject<ChannelState>();
+    const messageSubject = new Subject<string>();
+
+    const channel = connection.createDataChannel(DATA_CHANNEL_LABEL, {
+      id: DATA_CHANNEL_ID,
+      negotiated: true
+    });
+    channel.onopen = () => {
+      console.log('Data channel open.');
+      stateChangeSubject.next(ChannelState.OPEN);
+    };
+    channel.onclose = () => stateChangeSubject.next(ChannelState.CLOSED);
+    channel.onmessage = (e: MessageEvent) => messageSubject.next(e.data);
+    return {connection, stateChangeSubject, messageSubject, channel};
   }
 
 }
