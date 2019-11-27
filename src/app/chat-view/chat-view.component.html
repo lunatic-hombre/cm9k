@@ -1,0 +1,12 @@
+<div class="chat-view">
+  <ul class="messages">
+    <li *ngFor="let m of messages" [innerText]="m"></li>
+  </ul>
+  <form class="send-form" #sendForm="ngForm" (ngSubmit)="send()">
+    <textarea name="message"
+              [(ngModel)]="message"
+              (keydown.enter)="$event.preventDefault(); send()">
+    </textarea>
+    <input class="send-button" type="submit" value="Send" />
+  </form>
+</div>
