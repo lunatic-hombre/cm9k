@@ -69,8 +69,11 @@ export class MessageService {
           break;
         case 'ICE':
           this.channels.forEach(channel => {
-            channel.ice(payload);
+            channel.ice(new RTCIceCandidate(payload));
           });
+          break;
+        case 'TALK':
+          this.messages.next(payload);
           break;
       }
     });
@@ -89,7 +92,15 @@ export class MessageService {
 
   send(message: Message) {
     this.messages.next(message);
-    this.channels.forEach(channel => channel.send(JSON.stringify(message)));
+    if (this.hasNoOpenChannels()) {
+      this.socketSubject.next('TALK ' + this.userId + ' ' + btoa(JSON.stringify(message)));
+    } else {
+      this.channels.forEach(channel => channel.send(JSON.stringify(message)));
+    }
+  }
+
+  private hasNoOpenChannels(): boolean {
+    return !this.channels.map(c => c.isOpen()).reduce((o1, o2) => o1 || o2, false);
   }
 
   onMessage(): Observable<Message> {

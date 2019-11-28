@@ -2,14 +2,8 @@ import {Injectable} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
 
 const iceServers: RTCIceServer[] = [
-  {
-    urls: 'stun:stun.l.google.com:19302',
-  },
-  {
-    urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
-    username: 'webrtc',
-    credential: 'webrtc',
-  },
+  { urls: 'stun:stun.services.mozilla.com' },
+  { urls: 'stun:stun.l.google.com:19302' }
 ];
 
 export enum ChannelState {
@@ -36,6 +30,9 @@ export class PeerChannel {
       if (ev.candidate) {
         this.iceSubject.next(ev.candidate);
       }
+    };
+    this.connection.ondatachannel = ev => {
+      this.setChannel(ev.channel);
     };
   }
 
@@ -66,7 +63,11 @@ export class PeerChannel {
     });
   }
   send(message: string): void {
-    if (this.channel.readyState === 'open') {
+    if (!this.channel) {
+      console.log('Creating data channel');
+      console.log('Connection ', this.connection.connectionState);
+      this.channel = this.connection.createDataChannel(DATA_CHANNEL_LABEL);
+    } else if (this.channel.readyState === 'open') {
       this.channel.send(message);
     } else {
       console.log('DATA CHANNEL IS NOT OPEN ' + this.channel.readyState);
@@ -78,15 +79,10 @@ export class PeerChannel {
   state(): Observable<ChannelState> {
     return this.stateChangeSubject;
   }
+  isOpen(): boolean {
+    return !!this.channel && this.channel.readyState === 'open';
+  }
 }
-
-const waitForChannel = (connection: RTCPeerConnection): Promise<RTCDataChannel> => {
-  return new Promise(resolve => {
-    connection.ondatachannel = channel => {
-      resolve(channel.channel);
-    };
-  });
-};
 
 const DATA_CHANNEL_LABEL = 'TEST';
 
@@ -104,7 +100,7 @@ export class PeerWebRTCService {
           connect(remoteDesc: RTCSessionDescription): Promise<PeerChannel> {
             return connection.setRemoteDescription(remoteDesc).then(() => {
               console.log('Offer accepted, peer connection established.');
-              return new PeerChannel(connection).setChannel(connection.createDataChannel(DATA_CHANNEL_LABEL));
+              return new PeerChannel(connection);
             });
           }
         }));
@@ -122,12 +118,8 @@ export class PeerWebRTCService {
         .then(() => connection.createAnswer())
         .then(answer => connection.setLocalDescription(answer))
         .then(() => {
-          const peerChannel = new PeerChannel(connection);
-          waitForChannel(connection).then(channel => {
-            console.log('Sent answer, peer connection established.');
-            peerChannel.setChannel(channel);
-          });
-          return peerChannel;
+          console.log('Answer sent, established connection');
+          return new PeerChannel(connection);
         });
     } catch (e) {
       return Promise.reject(e);
