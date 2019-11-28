@@ -4,19 +4,8 @@
 				  <img [src]="message.sender.avatar" class="rounded-circle user_img_msg">
 				</div>
 				<div class="msg_cotainer">
-						{{message.text}}
+					<span [innerHTML]="message.text"></span>
 				  <span class="msg_time">{{momentToNow(message.timestamp)}}</span>
 				</div>
 			  </div>
 </div>
-<ng-template #otherContent>
-		<div class="d-flex justify-content-end mb-4">
-				<div class="msg_cotainer_send">
-						{{message.text}}
-				  <span class="msg_time_send">{{momentToNow(message.timestamp)}}</span>
-				</div>
-				<div class="img_cont_msg">
-			  <img src="assets/avatars/1.png" class="rounded-circle user_img_msg">
-				</div>
-			  </div>
-</ng-template>

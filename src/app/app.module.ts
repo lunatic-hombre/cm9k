@@ -8,6 +8,7 @@ import {FormsModule} from '@angular/forms';
 import { ChatBubbleComponent } from './chat-view/chat-bubble/chat-bubble.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import {  NgxEmojiPickerModule  } from 'ngx-emoji-picker';
+import {HttpClientModule} from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import {  NgxEmojiPickerModule  } from 'ngx-emoji-picker';
   ],
   imports: [
     BrowserModule,
+    HttpClientModule,
     AppRoutingModule,
     FormsModule,
     NgbModule,

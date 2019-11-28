@@ -4,6 +4,8 @@ import {getMyId, User} from './author.model';
 import {Observable, Subject} from 'rxjs';
 import {PeerChannel, PeerChannelCallback, PeerWebRTCService} from '../webrtc/peer-webrtc.service';
 import {SocketService} from '../sockets/socket.service';
+import {GifFilter} from './filters/gif.filter';
+import {MessageFilter} from './filters/message.filter';
 
 @Injectable({
   providedIn: 'root'
@@ -14,13 +16,14 @@ export class MessageService {
   rtc: PeerWebRTCService;
   channels: PeerChannel[];
   channelCallback: PeerChannelCallback;
+  messageFilters: MessageFilter[];
   messages: Subject<Message>;
   joins: Subject<User>;
   drops: Subject<string>;
   socketService: SocketService;
   socketSubject: Subject<any>;
 
-  constructor() {
+  constructor(private gifFilter: GifFilter) {
     this.userId = getMyId();
     this.rtc = new PeerWebRTCService();
     this.channels = [];
@@ -28,6 +31,7 @@ export class MessageService {
     this.joins = new Subject<User>();
     this.drops = new Subject<string>();
     this.socketService = new SocketService();
+    this.messageFilters = [gifFilter];
   }
 
   async connect(user: User, channelKey: string): Promise<void> {
@@ -93,7 +97,13 @@ export class MessageService {
     return this.channels.push(channel);
   }
 
-  send(message: Message) {
+  async send(message: Message) {
+    let txt = message.text;
+    for (const filter of this.messageFilters) {
+      txt = await filter.filter(txt);
+    }
+    message.text = txt;
+
     this.messages.next(message);
     if (this.hasNoOpenChannels()) {
       this.socketSubject.next('TALK ' + this.userId + ' ' + btoa(JSON.stringify(message)));
