@@ -12,21 +12,24 @@ import { NgbModal, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 })
 export class ChatViewComponent implements OnInit {
 
-  me: User = new User(getMyId(), 'anonymous');
-
-  receiver: User = {
-    name: 'anonymous'
-  };
-
-  messages: Array<Message>;
-  message = '';
-
   constructor(private messageService: MessageService,
               private route: ActivatedRoute,
               private cdRef: ChangeDetectorRef,
               private modalService: NgbModal) {
     this.messages = new Array<Message>();
   }
+
+  me: User = new User(getMyId(), 'anonymous');
+
+  receiver: User = {
+    id: '1',
+    name: 'anonymous'
+  };
+
+  messages: Array<Message>;
+  message = '';
+
+  toggled: boolean = false;
 
   ngOnInit() {
 
@@ -44,6 +47,7 @@ export class ChatViewComponent implements OnInit {
   }
 
   send() {
+    if (this.message === '') { return; }
     console.log('send', this.message);
     this.messageService.send(new Message(this.me, this.receiver, this.message));
     this.message = '';
@@ -52,6 +56,9 @@ export class ChatViewComponent implements OnInit {
   openModal(feature: string) {
     const modalRef = this.modalService.open(NgbdModalContent);
     modalRef.componentInstance.name = feature;
+  }
+  handleSelection(event) {
+    this.message += event.char;
   }
 
 }

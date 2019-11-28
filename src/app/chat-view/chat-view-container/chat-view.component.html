@@ -15,7 +15,7 @@
           <div class="card-header msg_head">
             <div class="d-flex bd-highlight">
               <div class="img_cont">
-                <img src="assets/avatars/1.png" class="rounded-circle user_img">
+                <img src="assets/avatars/2.png" class="rounded-circle user_img">
                 <span class="online_icon"></span>
               </div>
               <div class="user_info">
@@ -45,6 +45,12 @@
             <div class="input-group">
               <div class="input-group-append">
                 <span class="input-group-text attach_btn" (click)="openModal('File Uploads')"><i class="fas fa-paperclip"></i></span>
+                <span class="input-group-text attach_btn" 
+                (click)="toggled = !toggled"
+                [(emojiPickerIf)]="toggled"
+                [emojiPickerDirection]="'top'"
+                (emojiPickerSelect)="handleSelection($event)"
+                >🙂</span>
               </div>
               <textarea name="" class="form-control type_msg" placeholder="Type your message..."
               [(ngModel)]="message"
