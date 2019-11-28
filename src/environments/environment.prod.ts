@@ -1,3 +1,4 @@
 export const environment = {
-  production: true
+  production: true,
+  signalServerUrl: 'ws://localhost:8888/' // TODO
 };
