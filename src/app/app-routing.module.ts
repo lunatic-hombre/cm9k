@@ -4,7 +4,7 @@ import {ChatViewComponent} from './chat-view/chat-view-container/chat-view.compo
 
 const routes: Routes = [
   { path: '', component: ChatViewComponent, pathMatch: 'full' },
-  { path: 'c/:code', component: ChatViewComponent, pathMatch: 'prefix' }
+  { path: 'c/:channel', component: ChatViewComponent, pathMatch: 'prefix' }
 ];
 
 @NgModule({
