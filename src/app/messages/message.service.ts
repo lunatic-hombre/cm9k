@@ -1,22 +1,20 @@
 import {Injectable} from '@angular/core';
 import {PeerChannel} from '../webrtc/self-webrtc.service';
 import {Message} from './message.model';
-import {User} from './author.model';
+import {getMyId, User} from './author.model';
 import {Observable, Subject} from 'rxjs';
-import {PeerWebRTCService} from '../webrtc/peer-webrtc.service';
+import {PeerChannelCallback, PeerWebRTCService} from '../webrtc/peer-webrtc.service';
 import {SocketService} from '../sockets/socket.service';
-
-enum EventType {
-  MESSAGE, JOIN, DROP
-}
 
 @Injectable({
   providedIn: 'root'
 })
 export class MessageService {
 
+  userId: string;
   rtc: PeerWebRTCService;
-  channel: PeerChannel;
+  channels: PeerChannel[];
+  channelCallback: PeerChannelCallback;
   messages: Subject<Message>;
   joins: Subject<User>;
   drops: Subject<User>;
@@ -24,56 +22,62 @@ export class MessageService {
   socketSubject: Subject<any>;
 
   constructor() {
+    this.userId = getMyId();
     this.rtc = new PeerWebRTCService();
+    this.channels = [];
     this.messages = new Subject<Message>();
     this.joins = new Subject<User>();
     this.drops = new Subject<User>();
     this.socketService = new SocketService();
   }
 
-  connect(user: User, channel: string): Promise<void> {
-    this.socketSubject = this.socketService.connect(channel);
-    return this.rtc.connect().then(channelCallback => {
-      const desc = channelCallback.desc;
-      this.socketSubject.next(this.toHello(user, desc));
-      return this.socketSubject.toPromise()
-        .then(next => channelCallback.connect(this.fromHello(next.data)))
-        .then(peerChannel => {
-          this.channel = peerChannel;
-          this.channel.inbound().subscribe(str => {
-            console.log('receive ', str);
-            // tslint:disable-next-line:radix
-            const eventType = parseInt(str.charAt(0));
-            const eventObj = JSON.parse(str.substr(1));
-            switch (eventType) {
-              case EventType.MESSAGE:
-                this.messages.next(eventObj);
-                break;
-              default:
-                throw new Error('Unknown message type');
-            }
+  async connect(user: User, channelKey: string): Promise<void> {
+    this.socketSubject = this.socketService.connect(channelKey);
+    this.socketSubject.next(this.toHello(user));
+    this.socketSubject.subscribe(messageEvent => {
+      const messageString = messageEvent.data as string;
+      const parts = messageString.split(' ');
+      const verb = parts[0];
+      const userId = parts[1];
+      if (this.userId === userId) {
+        return;
+      }
+      const payload = JSON.parse(atob(parts[parts.length - 1]));
+
+      console.log(verb, userId, payload);
+
+      switch (verb) {
+        case 'OFFER':
+          this.rtc.answer(payload).then(channelAnswer => {
+            this.socketSubject.next('ANSWER ' + this.userId + ' ' + btoa(JSON.stringify(channelAnswer.desc)));
+            channelAnswer.channelPromise.then(channel => this.addChannel(channel));
           });
-        });
+          break;
+        case 'ANSWER':
+          this.channelCallback.connect(payload).then(channel => this.addChannel(channel));
+          break;
+        case 'HELLO':
+          this.rtc.offer().then(callback => {
+            this.channelCallback = callback;
+            this.socketSubject.next('OFFER ' + this.userId + ' ' + btoa(JSON.stringify(this.channelCallback.desc)));
+          });
+          break;
+      }
     });
   }
 
-  private toHello(user: User, desc): string {
-    return 'HELLO ' + user.id + ' ' + btoa(JSON.stringify({user, desc}));
+  private toHello(user: User): string {
+    return 'HELLO ' + user.id + ' ' + btoa(JSON.stringify({user}));
   }
 
-  private fromHello(data: string): RTCSessionDescription {
-    const parts = data.split(' ');
-    if (parts[0] === 'HELLO') {
-      return JSON.parse(atob(parts[2])).desc;
-    }
-    return null;
+  private addChannel(channel: PeerChannel) {
+    channel.inbound().subscribe(msg => this.messages.next(JSON.parse(msg)));
+    return this.channels.push(channel);
   }
 
   send(message: Message) {
     this.messages.next(message);
-    this.socketSubject.next(message);
-    // console.log('send ', EventType.MESSAGE + JSON.stringify(message));
-    // this.channel.send(EventType.MESSAGE + JSON.stringify(message));
+    this.channels.forEach(channel => channel.send(JSON.stringify(message)));
   }
 
   onMessage(): Observable<Message> {

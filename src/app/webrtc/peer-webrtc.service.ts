@@ -21,11 +21,59 @@ export interface PeerChannelCallback {
   connect(desc: RTCSessionDescription): Promise<PeerChannel>;
 }
 
-export interface PeerChannel {
-  send(message: string): void;
-  inbound(): Observable<string>;
-  state(): Observable<ChannelState>;
+export class PeerChannel {
+  stateChangeSubject: Subject<ChannelState>;
+  messageSubject: Subject<string>;
+
+  constructor(public desc: RTCSessionDescription, public channel: RTCDataChannel) {
+    this.stateChangeSubject = new Subject<ChannelState>();
+    this.messageSubject = new Subject<string>();
+    channel.onopen = () => {
+      console.log('Data channel open.');
+      this.stateChangeSubject.next(ChannelState.OPEN);
+    };
+    channel.onclose = () => this.stateChangeSubject.next(ChannelState.CLOSED);
+    channel.onmessage = (e: MessageEvent) => this.messageSubject.next(e.data);
+  }
+  send(message: string): void {
+    if (this.channel.readyState === 'open') {
+      this.channel.send(message);
+    } else {
+      console.log('DATA CHANNEL IS NOT OPEN ' + this.channel.readyState);
+    }
+  }
+  inbound(): Observable<string> {
+    return this.messageSubject;
+  }
+  state(): Observable<ChannelState> {
+    return this.stateChangeSubject;
+  }
 }
+
+export interface PeerChannelAnswer {
+  desc: RTCSessionDescription;
+  channelPromise: Promise<PeerChannel>;
+}
+
+const getChannelHooks = channel => {
+  const stateChangeSubject = new Subject<ChannelState>();
+  const messageSubject = new Subject<string>();
+  channel.onopen = () => {
+    console.log('Data channel open.');
+    stateChangeSubject.next(ChannelState.OPEN);
+  };
+  channel.onclose = () => stateChangeSubject.next(ChannelState.CLOSED);
+  channel.onmessage = (e: MessageEvent) => messageSubject.next(e.data);
+  return {stateChangeSubject, messageSubject};
+};
+
+const waitForChannel = (connection: RTCPeerConnection): Promise<RTCDataChannel> => {
+  return new Promise(resolve => {
+    connection.ondatachannel = channel => {
+      resolve(channel.channel);
+    };
+  });
+};
 
 const DATA_CHANNEL_LABEL = 'TEST CHANNEL 123';
 const DATA_CHANNEL_ID = 0;
@@ -35,25 +83,18 @@ const DATA_CHANNEL_ID = 0;
 })
 export class PeerWebRTCService {
 
-  connect(): Promise<PeerChannelCallback> {
+  offer(): Promise<PeerChannelCallback> {
     try {
-      const {connection, stateChangeSubject, messageSubject, channel} = this.doConnectLocal();
+      const connection = this.doConnectLocal();
 
       return connection.createOffer().then(offer => {
         return connection.setLocalDescription(offer).then(() => ({
           desc: connection.localDescription,
           connect(remoteDesc: RTCSessionDescription): Promise<PeerChannel> {
-            return connection.setRemoteDescription(remoteDesc).then(() => ({
-              send(message: string): void {
-                channel.send(message);
-              },
-              inbound(): Observable<string> {
-                return messageSubject;
-              },
-              state(): Observable<ChannelState> {
-                return stateChangeSubject;
-              }
-            }));
+            return connection.setRemoteDescription(remoteDesc).then(() => {
+              console.log('Offer accepted, peer connection established.');
+              return new PeerChannel(connection.localDescription, connection.createDataChannel(DATA_CHANNEL_LABEL));
+            });
           }
         }));
       });
@@ -62,24 +103,29 @@ export class PeerWebRTCService {
     }
   }
 
-  private doConnectLocal() {
-    const connection = new RTCPeerConnection({
-      iceServers
-    });
-    const stateChangeSubject = new Subject<ChannelState>();
-    const messageSubject = new Subject<string>();
+  answer(offer: RTCSessionDescription): Promise<PeerChannelAnswer> {
+    try {
+      const connection = this.doConnectLocal();
 
-    const channel = connection.createDataChannel(DATA_CHANNEL_LABEL, {
-      id: DATA_CHANNEL_ID,
-      negotiated: true
-    });
-    channel.onopen = () => {
-      console.log('Data channel open.');
-      stateChangeSubject.next(ChannelState.OPEN);
-    };
-    channel.onclose = () => stateChangeSubject.next(ChannelState.CLOSED);
-    channel.onmessage = (e: MessageEvent) => messageSubject.next(e.data);
-    return {connection, stateChangeSubject, messageSubject, channel};
+      return connection.setRemoteDescription(offer)
+        .then(() => connection.createAnswer())
+        .then(answer => connection.setLocalDescription(answer))
+        .then(() => {
+          return {
+            desc: connection.localDescription,
+            channelPromise: waitForChannel(connection).then(channel => {
+              console.log('Sent answer, peer connection established.');
+              return new PeerChannel(connection.localDescription, channel);
+            })
+          };
+        });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  private doConnectLocal(): RTCPeerConnection {
+    return new RTCPeerConnection({ iceServers });
   }
 
 }
