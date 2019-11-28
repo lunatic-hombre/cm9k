@@ -2,12 +2,14 @@ import {User} from './author.model';
 
 export class Message {
   timestamp: number;
-  author: User;
+  sender: User;
+  receiver: User;
   text: string;
 
-  constructor(author: User, text: string) {
+  constructor(sender: User, receiver: User, text: string) {
     this.timestamp = Date.now();
-    this.author = author;
+    this.sender = sender;
+    this.receiver = receiver;
     this.text = text;
   }
 }

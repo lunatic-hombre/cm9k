@@ -31,18 +31,19 @@ export class ChatViewComponent implements OnInit {
       this.messageService.connect(this.me, channel)
         .then(() => {
           console.log('Connected to peer!');
-          this.messageService.onMessage().subscribe(msg => {
-            this.messages.push(msg);
-            this.cdRef.detectChanges();
-          });
         })
         .catch(err => console.error('Connection failure!', err));
+    });
+
+    this.messageService.onMessage().subscribe(msg => {
+      this.messages.push(msg);
+      this.cdRef.detectChanges();
     });
   }
 
   send() {
     console.log('send', this.message);
-    this.messageService.send(new Message(this.me, this.message));
+    this.messageService.send(new Message(this.me, this.me, this.message));
     this.message = '';
   }
 
