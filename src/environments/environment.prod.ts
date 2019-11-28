@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  signalServerUrl: 'ws://localhost:8888/' // TODO
+  signalServerUrl: `wss://${window.location.hostname}:${window.location.port}/`
 };

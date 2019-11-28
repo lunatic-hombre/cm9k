@@ -10,7 +10,7 @@ import * as moment from 'moment';
 export class ChatBubbleComponent {
   @Input() fromMe: boolean;
   @Input() message: Message;
-  momentToNow(date: Date): string {
-    return moment(date).fromNow();
+  momentToNow(timestamp: number): string {
+    return moment(timestamp).fromNow();
   }
 }
