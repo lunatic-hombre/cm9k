@@ -35,9 +35,9 @@ export class SocketService {
         ws.onclose = obs.complete.bind(obs);
         return ws.close.bind(ws);
       });
-    const sendWithRetry = (data: any) => {
+    const sendWithRetry = (data: string) => {
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(data));
+        ws.send(data);
       } else {
         setTimeout(() => sendWithRetry(data), RETRY_INTERVAL);
       }
