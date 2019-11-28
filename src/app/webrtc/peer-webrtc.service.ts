@@ -1,11 +1,6 @@
 import {Injectable} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
 
-const iceServers: RTCIceServer[] = [
-  { urls: 'stun:stun.services.mozilla.com' },
-  { urls: 'stun:stun.l.google.com:19302' }
-];
-
 export enum ChannelState {
   OPEN, CLOSED
 }
@@ -127,7 +122,18 @@ export class PeerWebRTCService {
   }
 
   private doConnectLocal(): RTCPeerConnection {
-    return new RTCPeerConnection({iceServers});
+    const connection = new RTCPeerConnection({
+      iceServers: [
+        { urls: 'stun:stun.services.mozilla.com' },
+        { urls: 'turn:192.158.29.39:3478?transport=tcp',
+          credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+          username: '28224511:1379330808' }
+      ]
+    });
+    connection.onicecandidateerror = ev => console.error(ev);
+    connection.onnegotiationneeded = ev => console.error(ev);
+    connection.oniceconnectionstatechange = ev => console.log(ev);
+    return connection;
   }
 
 }

@@ -1,7 +1,7 @@
-<div *ngIf="received; else otherContent">
-		<div class="d-flex justify-content-start mb-4">
+<div>
+		<div class="d-flex justify-content-start mb-4" [class.justify-content-end]="fromMe">
 				<div class="img_cont_msg">
-				  <img src="assets/avatars/2.png" class="rounded-circle user_img_msg">
+				  <img [src]="message.sender.avatar" class="rounded-circle user_img_msg">
 				</div>
 				<div class="msg_cotainer">
 						{{message.text}}

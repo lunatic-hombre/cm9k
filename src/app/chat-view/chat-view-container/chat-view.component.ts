@@ -19,15 +19,12 @@ export class ChatViewComponent implements OnInit {
     this.messages = new Array<Message>();
   }
 
-  me: User = new User(getMyId(), 'anonymous');
-
-  receiver: User = {
-    id: '1',
-    name: 'anonymous'
-  };
+  me: User = new User(getMyId(), 'anonymous', 'assets/avatars/' + (Math.floor(Math.random() * 7) + 1) + '.png');
 
   messages: Array<Message>;
   message = '';
+
+  users: Array<User> = [];
 
   toggled = false;
 
@@ -38,12 +35,20 @@ export class ChatViewComponent implements OnInit {
       this.messageService.connect(this.me, channel)
         .then(() => console.log('Message service connected'))
         .catch(err => console.error('Connection failure!', err));
+      this.messageService.onJoin().subscribe(user => {
+        this.users.push(user);
+      });
+      this.messageService.onDrop().subscribe(userId => {
+        for (let i = 0; i < this.users.length; i++) {
+          if (this.users[i].id === userId) {
+            this.users.splice(i, 1);
+          }
+          console.log(this.users);
+        }
+      });
     });
 
     this.messageService.onMessage().subscribe(msg => {
-      if (msg.sender.id !== this.me.id) {
-        this.receiver = msg.sender;
-      }
       this.messages.push( Object.assign({}, msg));
       this.cdRef.detectChanges();
     });
@@ -52,7 +57,7 @@ export class ChatViewComponent implements OnInit {
   send() {
     if (this.message === '') { return; }
     console.log('send', this.message);
-    this.messageService.send(new Message(this.me, this.receiver, this.message));
+    this.messageService.send(new Message(this.me, this.message));
     this.message = '';
   }
 

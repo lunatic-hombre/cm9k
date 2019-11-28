@@ -16,7 +16,7 @@ export class MessageService {
   channelCallback: PeerChannelCallback;
   messages: Subject<Message>;
   joins: Subject<User>;
-  drops: Subject<User>;
+  drops: Subject<string>;
   socketService: SocketService;
   socketSubject: Subject<any>;
 
@@ -26,7 +26,7 @@ export class MessageService {
     this.channels = [];
     this.messages = new Subject<Message>();
     this.joins = new Subject<User>();
-    this.drops = new Subject<User>();
+    this.drops = new Subject<string>();
     this.socketService = new SocketService();
   }
 
@@ -43,7 +43,7 @@ export class MessageService {
         console.log(verb + ' from myself.');
         return;
       }
-      const payload = JSON.parse(atob(parts[parts.length - 1]));
+      const payload = parts[2] ? JSON.parse(atob(parts[2])) : null;
 
       console.log(verb, userId, payload);
 
@@ -65,7 +65,10 @@ export class MessageService {
             this.channelCallback = callback;
             this.socketSubject.next('OFFER ' + this.userId + ' ' + btoa(JSON.stringify(this.channelCallback.desc)));
           });
-          this.joins.next(payload);
+          this.joins.next(payload.user);
+          break;
+        case 'BYE':
+          this.drops.next(userId);
           break;
         case 'ICE':
           this.channels.forEach(channel => {
@@ -111,7 +114,7 @@ export class MessageService {
     return this.joins;
   }
 
-  onDrop(): Observable<User> {
+  onDrop(): Observable<string> {
     return this.drops;
   }
 

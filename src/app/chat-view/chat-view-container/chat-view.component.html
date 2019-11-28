@@ -1,6 +1,6 @@
 <div class="container-fluid h-100">
     <div class="row justify-content-center h-100">
-      
+
         <div class="col-md-3 offset-md-6">
         <div class="input-group mb-3">
             <div class="input-group-prepend">
@@ -9,25 +9,20 @@
             <input [(ngModel)]="me.name" type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
           </div>
         </div>
-          
+
       <div class="col-md-9 chat">
         <div class="card">
           <div class="card-header msg_head">
             <div class="d-flex bd-highlight">
               <div class="img_cont">
-                <img src="assets/avatars/2.png" class="rounded-circle user_img">
+                <img [src]="me.avatar" class="rounded-circle user_img">
                 <span class="online_icon"></span>
               </div>
-              <div class="user_info">
-                <span>Chat with {{this.receiver.name}}</span>
-                <p>{{this.messages.length}} Messages</p>
-              </div>
-              <div class="video_cam">
-                <span (click)="openModal('Video Calling')"><i class="fas fa-video"></i></span>
-                <span (click)="openModal('Audio Calling')"><i class="fas fa-phone"></i></span>
-              </div>
             </div>
-            <span id="action_menu_btn"><i class="fas fa-ellipsis-v"></i></span>
+            <span id="action_menu_btn">
+              <span (click)="openModal('Video Calling')"><i class="fas fa-video"></i></span>
+              <span (click)="openModal('Audio Calling')"><i class="fas fa-phone"></i></span>
+            </span>
             <div class="action_menu">
               <ul>
                 <li><i class="fas fa-user-circle"></i> View profile</li>
@@ -38,14 +33,13 @@
             </div>
           </div>
           <div class="card-body msg_card_body" #scrollMe [scrollTop]="scrollMe.scrollHeight">
-              <cm-chat-bubble [received]="m.sender.id !== me.id"  *ngFor="let m of messages" [message]="m" >
-              </cm-chat-bubble>
+              <cm-chat-bubble *ngFor="let m of messages" [message]="m" [fromMe]="m.sender.id === me.id"></cm-chat-bubble>
           </div>
           <div class="card-footer">
             <div class="input-group">
               <div class="input-group-append">
                 <span class="input-group-text attach_btn" (click)="openModal('File Uploads')"><i class="fas fa-paperclip"></i></span>
-                <span class="input-group-text attach_btn emoji" 
+                <span class="input-group-text attach_btn emoji"
                 (click)="toggled = !toggled"
                 [(emojiPickerIf)]="toggled"
                 [emojiPickerDirection]="'top'"

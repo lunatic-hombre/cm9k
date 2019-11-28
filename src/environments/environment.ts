@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  signalServerUrl: 'ws://localhost:8888/'
+  signalServerUrl: 'ws://' + window.location.hostname + ':8080/'
 };
 
 /*

@@ -8,8 +8,8 @@ import * as moment from 'moment';
   styleUrls: ['./chat-bubble.component.scss']
 })
 export class ChatBubbleComponent {
+  @Input() fromMe: boolean;
   @Input() message: Message;
-  @Input() received: string;
   momentToNow(date: Date): string {
     return moment(date).fromNow();
   }
