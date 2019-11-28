@@ -16,8 +16,12 @@ export enum ChannelState {
   OPEN, CLOSED
 }
 
+export interface PeerChannelCallback {
+  desc: RTCSessionDescription;
+  connect(desc: RTCSessionDescription): Promise<PeerChannel>;
+}
+
 export interface PeerChannel {
-  desc: string;
   send(message: string): void;
   inbound(): Observable<string>;
   state(): Observable<ChannelState>;
@@ -31,61 +35,34 @@ const DATA_CHANNEL_ID = 0;
 })
 export class PeerWebRTCService {
 
-  host(): Promise<PeerChannel> {
+  connect(): Promise<PeerChannelCallback> {
     try {
-      const {connection, stateChangeSubject, messageSubject, channel} = this.connect();
+      const {connection, stateChangeSubject, messageSubject, channel} = this.doConnectLocal();
 
-      connection.onicecandidate = e => {
-        console.log(e);
-      };
-
-      return connection.createOffer()
-        .then(offer => {
-          connection.setLocalDescription(offer).then(() => console.log('Set local description.', connection.localDescription));
-          return {
-            desc: btoa(JSON.stringify(offer)),
-            send(message: string): void {
-              channel.send(message);
-            },
-            inbound(): Observable<string> {
-              return messageSubject;
-            },
-            state(): Observable<ChannelState> {
-              return stateChangeSubject;
-            }
-          };
-        });
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  }
-
-  join(code: string): Promise<PeerChannel> {
-    try {
-      const {connection, stateChangeSubject, messageSubject, channel} = this.connect();
-      const remoteDesc = JSON.parse(atob(code));
-
-      return connection.setRemoteDescription(remoteDesc)
-        .then(() => connection.createAnswer())
-        .then(localDesc => connection.setLocalDescription(localDesc))
-        .then(() => ({
-          desc: code,
-          send(message: string): void {
-            channel.send(message);
-          },
-          inbound(): Observable<string> {
-            return messageSubject;
-          },
-          state(): Observable<ChannelState> {
-            return stateChangeSubject;
+      return connection.createOffer().then(offer => {
+        return connection.setLocalDescription(offer).then(() => ({
+          desc: connection.localDescription,
+          connect(remoteDesc: RTCSessionDescription): Promise<PeerChannel> {
+            return connection.setRemoteDescription(remoteDesc).then(() => ({
+              send(message: string): void {
+                channel.send(message);
+              },
+              inbound(): Observable<string> {
+                return messageSubject;
+              },
+              state(): Observable<ChannelState> {
+                return stateChangeSubject;
+              }
+            }));
           }
         }));
+      });
     } catch (e) {
       return Promise.reject(e);
     }
   }
 
-  private connect() {
+  private doConnectLocal() {
     const connection = new RTCPeerConnection({
       iceServers
     });

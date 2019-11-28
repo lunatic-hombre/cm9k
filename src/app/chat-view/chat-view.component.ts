@@ -27,8 +27,8 @@ export class ChatViewComponent implements OnInit {
   ngOnInit() {
 
     this.route.paramMap.subscribe(params => {
-      const code = params.get('code');
-      this.messageService.connect(this.me, code)
+      const channel = params.get('channel');
+      this.messageService.connect(this.me, channel)
         .then(() => {
           console.log('Connected to peer!');
           this.messageService.onMessage().subscribe(msg => {
