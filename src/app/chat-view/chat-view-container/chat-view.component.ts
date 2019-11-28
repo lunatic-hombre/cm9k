@@ -29,7 +29,7 @@ export class ChatViewComponent implements OnInit {
   messages: Array<Message>;
   message = '';
 
-  toggled: boolean = false;
+  toggled = false;
 
   ngOnInit() {
 
@@ -41,6 +41,9 @@ export class ChatViewComponent implements OnInit {
     });
 
     this.messageService.onMessage().subscribe(msg => {
+      if (msg.sender.id !== this.me.id) {
+        this.receiver = msg.sender;
+      }
       this.messages.push( Object.assign({}, msg));
       this.cdRef.detectChanges();
     });
