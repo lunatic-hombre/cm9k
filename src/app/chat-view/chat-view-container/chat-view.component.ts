@@ -27,9 +27,16 @@ export class ChatViewComponent implements OnInit {
   users: Array<User> = [];
 
   toggled = false;
+  notify = false;
 
   ngOnInit() {
-
+    if (Notification.permission === 'granted') {
+      this.notify = true;
+    } else {
+      Notification.requestPermission().then(permission => {
+        this.notify = permission === 'granted';
+      });
+    }
     this.route.paramMap.subscribe(params => {
       const channel = params.get('channel');
       this.messageService.connect(this.me, channel)
@@ -47,9 +54,12 @@ export class ChatViewComponent implements OnInit {
         }
       });
     });
-
     this.messageService.onMessage().subscribe(msg => {
       this.messages.push( Object.assign({}, msg));
+      if (this.notify) {
+        const n = new Notification(msg.sender.name + ' says', { body: msg.text, icon: msg.sender.avatar });
+        setTimeout(n.close.bind(n), 4000);
+      }
       this.cdRef.detectChanges();
     });
   }
