@@ -1,9 +1,8 @@
 import {Injectable} from '@angular/core';
-import {PeerChannel} from '../webrtc/self-webrtc.service';
 import {Message} from './message.model';
 import {getMyId, User} from './author.model';
 import {Observable, Subject} from 'rxjs';
-import {PeerChannelCallback, PeerWebRTCService} from '../webrtc/peer-webrtc.service';
+import {PeerChannel, PeerChannelCallback, PeerWebRTCService} from '../webrtc/peer-webrtc.service';
 import {SocketService} from '../sockets/socket.service';
 
 @Injectable({
@@ -39,7 +38,9 @@ export class MessageService {
       const parts = messageString.split(' ');
       const verb = parts[0];
       const userId = parts[1];
+
       if (this.userId === userId) {
+        console.log(verb + ' from myself.');
         return;
       }
       const payload = JSON.parse(atob(parts[parts.length - 1]));
@@ -48,18 +49,27 @@ export class MessageService {
 
       switch (verb) {
         case 'OFFER':
-          this.rtc.answer(payload).then(channelAnswer => {
-            this.socketSubject.next('ANSWER ' + this.userId + ' ' + btoa(JSON.stringify(channelAnswer.desc)));
-            channelAnswer.channelPromise.then(channel => this.addChannel(channel));
+          this.rtc.answer(payload).then(channel => {
+            this.socketSubject.next('ANSWER ' + this.userId + ' ' + btoa(JSON.stringify(channel.desc)));
           });
           break;
         case 'ANSWER':
+          if (!this.channelCallback) {
+            console.log('Channel callback not defined');
+            break;
+          }
           this.channelCallback.connect(payload).then(channel => this.addChannel(channel));
           break;
         case 'HELLO':
           this.rtc.offer().then(callback => {
             this.channelCallback = callback;
             this.socketSubject.next('OFFER ' + this.userId + ' ' + btoa(JSON.stringify(this.channelCallback.desc)));
+          });
+          this.joins.next(payload);
+          break;
+        case 'ICE':
+          this.channels.forEach(channel => {
+            channel.ice(payload);
           });
           break;
       }
@@ -72,6 +82,8 @@ export class MessageService {
 
   private addChannel(channel: PeerChannel) {
     channel.inbound().subscribe(msg => this.messages.next(JSON.parse(msg)));
+    channel.state().subscribe(state => console.log('State change: ' + state));
+    channel.iceSubject.subscribe(candidate => this.socketSubject.next('ICE ' + this.userId + ' ' + btoa(JSON.stringify(candidate))));
     return this.channels.push(channel);
   }
 
