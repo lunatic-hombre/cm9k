@@ -10,8 +10,7 @@ const GIPHY_API_KEY = 'dc6zaTOxFJmzC';
 })
 export class GifFilter implements MessageFilter {
 
-  constructor(private http: HttpClient) {
-  }
+  constructor(private http: HttpClient) {}
 
   async filter(msg: string): Promise<string> {
     if (msg.startsWith('gif')) {

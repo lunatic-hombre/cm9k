@@ -6,6 +6,8 @@ import {PeerChannel, PeerChannelCallback, PeerWebRTCService} from '../webrtc/pee
 import {SocketService} from '../sockets/socket.service';
 import {GifFilter} from './filters/gif.filter';
 import {MessageFilter} from './filters/message.filter';
+import {ImgFilter} from './filters/img.filter';
+import {LinkFilter} from './filters/link.filter';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +25,9 @@ export class MessageService {
   socketService: SocketService;
   socketSubject: Subject<any>;
 
-  constructor(private gifFilter: GifFilter) {
+  constructor(private gifFilter: GifFilter,
+              private imgFilter: ImgFilter,
+              private linkFilter: LinkFilter) {
     this.userId = getMyId();
     this.rtc = new PeerWebRTCService();
     this.channels = [];
@@ -31,7 +35,7 @@ export class MessageService {
     this.joins = new Subject<User>();
     this.drops = new Subject<string>();
     this.socketService = new SocketService();
-    this.messageFilters = [gifFilter];
+    this.messageFilters = [imgFilter, gifFilter, linkFilter];
   }
 
   async connect(user: User, channelKey: string): Promise<void> {
