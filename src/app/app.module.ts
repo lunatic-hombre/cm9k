@@ -3,22 +3,26 @@ import {NgModule} from '@angular/core';
 
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
-import {ChatViewComponent} from './chat-view/chat-view-container/chat-view.component';
+import {ChatViewComponent, NgbdModalContent} from './chat-view/chat-view-container/chat-view.component';
 import {FormsModule} from '@angular/forms';
 import { ChatBubbleComponent } from './chat-view/chat-bubble/chat-bubble.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   declarations: [
     AppComponent,
     ChatViewComponent,
-    ChatBubbleComponent
+    ChatBubbleComponent,
+    NgbdModalContent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    FormsModule
+    FormsModule,
+    NgbModule
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  entryComponents: [NgbdModalContent]
 })
 export class AppModule { }

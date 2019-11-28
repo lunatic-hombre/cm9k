@@ -23,8 +23,8 @@
                 <p>{{this.messages.length}} Messages</p>
               </div>
               <div class="video_cam">
-                <span><i class="fas fa-video"></i></span>
-                <span><i class="fas fa-phone"></i></span>
+                <span (click)="openModal('Video Calling')"><i class="fas fa-video"></i></span>
+                <span (click)="openModal('Audio Calling')"><i class="fas fa-phone"></i></span>
               </div>
             </div>
             <span id="action_menu_btn"><i class="fas fa-ellipsis-v"></i></span>
@@ -44,7 +44,7 @@
           <div class="card-footer">
             <div class="input-group">
               <div class="input-group-append">
-                <span class="input-group-text attach_btn"><i class="fas fa-paperclip"></i></span>
+                <span class="input-group-text attach_btn" (click)="openModal('File Uploads')"><i class="fas fa-paperclip"></i></span>
               </div>
               <textarea name="" class="form-control type_msg" placeholder="Type your message..."
               [(ngModel)]="message"
