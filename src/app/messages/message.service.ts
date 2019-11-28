@@ -35,9 +35,9 @@ export class MessageService {
     this.socketSubject = this.socketService.connect(channel);
     return this.rtc.connect().then(channelCallback => {
       const desc = channelCallback.desc;
-      this.socketSubject.next({user, desc});
+      this.socketSubject.next(this.toHello(user, desc));
       return this.socketSubject.toPromise()
-        .then(next => channelCallback.connect(next))
+        .then(next => channelCallback.connect(this.fromHello(next.data)))
         .then(peerChannel => {
           this.channel = peerChannel;
           this.channel.inbound().subscribe(str => {
@@ -55,6 +55,18 @@ export class MessageService {
           });
         });
     });
+  }
+
+  private toHello(user: User, desc): string {
+    return 'HELLO ' + user.id + ' ' + btoa(JSON.stringify({user, desc}));
+  }
+
+  private fromHello(data: string): RTCSessionDescription {
+    const parts = data.split(' ');
+    if (parts[0] === 'HELLO') {
+      return JSON.parse(atob(parts[2])).desc;
+    }
+    return null;
   }
 
   send(message: Message) {

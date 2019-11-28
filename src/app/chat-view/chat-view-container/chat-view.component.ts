@@ -1,6 +1,6 @@
 import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {MessageService} from '../../messages/message.service';
-import {User} from '../../messages/author.model';
+import {getMyId, User} from '../../messages/author.model';
 import {Message} from '../../messages/message.model';
 import {ActivatedRoute} from '@angular/router';
 
@@ -11,9 +11,7 @@ import {ActivatedRoute} from '@angular/router';
 })
 export class ChatViewComponent implements OnInit {
 
-  me: User = {
-    name: 'anonymous'
-  };
+  me: User = new User(getMyId(), 'anonymous');
 
   messages: Array<Message>;
   message = '';
