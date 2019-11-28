@@ -8,8 +8,8 @@ export class Message {
 
   constructor(sender: User, receiver: User, text: string) {
     this.timestamp = Date.now();
-    this.sender = sender;
-    this.receiver = receiver;
+    this.sender = {...sender};
+    this.receiver = {...receiver};
     this.text = text;
   }
 }

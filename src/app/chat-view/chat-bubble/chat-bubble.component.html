@@ -1,11 +1,11 @@
 <div *ngIf="received; else otherContent">
 		<div class="d-flex justify-content-start mb-4">
 				<div class="img_cont_msg">
-				  <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" class="rounded-circle user_img_msg">
+				  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTVUCwMOnO2iHgiIZCqT1J-L3bd0NA-o5L-t3nUT0JqrnauIj4U&s" class="rounded-circle user_img_msg">
 				</div>
 				<div class="msg_cotainer">
 						{{message.text}}
-				  <span class="msg_time">9:00 AM, Today</span>
+				  <span class="msg_time">{{momentToNow(message.timestamp)}}</span>
 				</div>
 			  </div>
 </div>
@@ -13,10 +13,10 @@
 		<div class="d-flex justify-content-end mb-4">
 				<div class="msg_cotainer_send">
 						{{message.text}}
-				  <span class="msg_time_send">9:05 AM, Today</span>
+				  <span class="msg_time_send">{{momentToNow(message.timestamp)}}</span>
 				</div>
 				<div class="img_cont_msg">
-			  <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" class="rounded-circle user_img_msg">
+			  <img src="https://www.clipartmax.com/png/full/257-2572603_user-man-social-avatar-profile-icon-man-avatar-in-circle.png" class="rounded-circle user_img_msg">
 				</div>
 			  </div>
 </ng-template>

@@ -15,6 +15,10 @@ export class ChatViewComponent implements OnInit {
     name: 'anonymous'
   };
 
+  receiver: User = {
+    name: 'anonymous'
+  };
+
   messages: Array<Message>;
   message = '';
 
@@ -36,14 +40,14 @@ export class ChatViewComponent implements OnInit {
     });
 
     this.messageService.onMessage().subscribe(msg => {
-      this.messages.push(msg);
+      this.messages.push( Object.assign({}, msg));
       this.cdRef.detectChanges();
     });
   }
 
   send() {
     console.log('send', this.message);
-    this.messageService.send(new Message(this.me, this.me, this.message));
+    this.messageService.send(new Message(this.me, this.receiver, this.message));
     this.message = '';
   }
 
