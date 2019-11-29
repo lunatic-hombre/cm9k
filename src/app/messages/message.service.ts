@@ -111,6 +111,7 @@ export class MessageService {
     this.messages.next(message);
     if (this.hasNoOpenChannels()) {
       this.socketSubject.next('TALK ' + this.userId + ' ' + btoa(JSON.stringify(message)));
+      this.channels.forEach(channel => channel.send(JSON.stringify(message)));
     } else {
       this.channels.forEach(channel => channel.send(JSON.stringify(message)));
     }

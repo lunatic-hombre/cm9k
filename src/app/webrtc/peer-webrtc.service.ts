@@ -11,12 +11,11 @@ export interface PeerChannelCallback {
 }
 
 export class PeerChannel {
-  channel: RTCDataChannel;
   stateChangeSubject: Subject<ChannelState>;
   messageSubject: Subject<string>;
   iceSubject: Subject<RTCIceCandidate>;
 
-  constructor(public connection: RTCPeerConnection) {
+  constructor(public connection: RTCPeerConnection, public channel?: RTCDataChannel) {
     this.stateChangeSubject = new Subject<ChannelState>();
     this.messageSubject = new Subject<string>();
     this.iceSubject = new Subject<RTCIceCandidate>();
@@ -32,6 +31,8 @@ export class PeerChannel {
   }
 
   setChannel(channel: RTCDataChannel): PeerChannel {
+    console.log('Setting data channel');
+    console.log('Connection ', this.connection.connectionState);
     this.channel = channel;
     this.channel.onopen = () => {
       console.log('Data channel open.');
@@ -58,11 +59,7 @@ export class PeerChannel {
     });
   }
   send(message: string): void {
-    if (!this.channel) {
-      console.log('Creating data channel');
-      console.log('Connection ', this.connection.connectionState);
-      this.channel = this.connection.createDataChannel(DATA_CHANNEL_LABEL);
-    } else if (this.channel.readyState === 'open') {
+    if (this.channel.readyState === 'open') {
       this.channel.send(message);
     } else {
       console.log('DATA CHANNEL IS NOT OPEN ' + this.channel.readyState);
@@ -89,13 +86,14 @@ export class PeerWebRTCService {
   offer(): Promise<PeerChannelCallback> {
     try {
       const connection = this.doConnectLocal();
+      const channel = connection.createDataChannel(DATA_CHANNEL_LABEL);
       return connection.createOffer().then(offer => {
         return connection.setLocalDescription(offer).then(() => ({
           desc: connection.localDescription,
           connect(remoteDesc: RTCSessionDescription): Promise<PeerChannel> {
             return connection.setRemoteDescription(remoteDesc).then(() => {
               console.log('Offer accepted, peer connection established.');
-              return new PeerChannel(connection);
+              return new PeerChannel(connection, channel);
             });
           }
         }));
@@ -124,10 +122,17 @@ export class PeerWebRTCService {
   private doConnectLocal(): RTCPeerConnection {
     const connection = new RTCPeerConnection({
       iceServers: [
-        { urls: 'stun:stun.services.mozilla.com' },
-        { urls: 'turn:192.158.29.39:3478?transport=tcp',
-          credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-          username: '28224511:1379330808' }
+        {
+          urls: 'stun:stun.l.google.com:19302',
+        },
+        {
+          urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
+          username: 'webrtc',
+          credential: 'webrtc',
+        },
+        // { urls: 'stun:stun.services.mozilla.com' },
+        // { urls: 'stun:stun.l.google.com:19302' },
+        // { urls: 'turn:188.166.15.239', username: 'rtc', credential: 'cm9k', credentialType: 'password' }
       ]
     });
     connection.onicecandidateerror = ev => console.error(ev);
