@@ -4,6 +4,8 @@
 
 export const environment = {
   production: false,
+  giphyUrl: 'http://api.giphy.com/v1/gifs/translate',
+  giphyKey: 'dc6zaTOxFJmzC',
   signalServerUrl: 'ws://' + window.location.hostname + ':8080/'
 };
 

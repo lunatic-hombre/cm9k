@@ -20,9 +20,8 @@ export class PeerChannel {
     this.messageSubject = new Subject<string>();
     this.iceSubject = new Subject<RTCIceCandidate>();
     this.connection.onicecandidate = ev => {
-      console.log('ICE', ev.candidate);
       if (ev.candidate) {
-        this.iceSubject.next(ev.candidate);
+        // this.iceSubject.next(ev.candidate);
       }
     };
     this.connection.ondatachannel = ev => {
@@ -121,18 +120,10 @@ export class PeerWebRTCService {
 
   private doConnectLocal(): RTCPeerConnection {
     const connection = new RTCPeerConnection({
+      iceTransportPolicy: 'all',
       iceServers: [
-        {
-          urls: 'stun:stun.l.google.com:19302',
-        },
-        {
-          urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
-          username: 'webrtc',
-          credential: 'webrtc',
-        },
-        // { urls: 'stun:stun.services.mozilla.com' },
-        // { urls: 'stun:stun.l.google.com:19302' },
-        // { urls: 'turn:188.166.15.239', username: 'rtc', credential: 'cm9k', credentialType: 'password' }
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'turn:test.bardly.io', username: 'rtc', credential: 'cm9k' }
       ]
     });
     connection.onicecandidateerror = ev => console.error(ev);
