@@ -5,6 +5,8 @@ import {Message} from '../../messages/message.model';
 import {ActivatedRoute} from '@angular/router';
 import { NgbModal, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
+const MESSAGE_LIMIT = 50;
+
 @Component({
   selector: 'cm-chat-view',
   templateUrl: './chat-view.component.html',
@@ -20,6 +22,7 @@ export class ChatViewComponent implements OnInit {
   }
 
   me: User = new User(getMyId(), 'anonymous', 'assets/avatars/' + (Math.floor(Math.random() * 7) + 1) + '.png');
+  channel = '';
 
   messages: Array<Message>;
   message = '';
@@ -38,8 +41,13 @@ export class ChatViewComponent implements OnInit {
       });
     }
     this.route.paramMap.subscribe(params => {
-      const channel = params.get('channel');
-      this.messageService.connect(this.me, channel)
+      this.channel = params.get('channel');
+      // get saved
+      const oldMessagesValue = localStorage.getItem('messages/' + this.channel);
+      if (oldMessagesValue) {
+        this.messages = JSON.parse(oldMessagesValue);
+      }
+      this.messageService.connect(this.me, this.channel)
         .then(() => console.log('Message service connected'))
         .catch(err => console.error('Connection failure!', err));
       this.messageService.onJoin().subscribe(user => {
@@ -53,15 +61,45 @@ export class ChatViewComponent implements OnInit {
           console.log(this.users);
         }
       });
+      this.messageService.onAsk().subscribe(() => {
+        this.messageService.sendAll(this.messages);
+      });
     });
-    this.messageService.onMessage().subscribe(msg => {
-      this.messages.push( Object.assign({}, msg));
-      if (this.notify) {
-        const n = new Notification(msg.sender.name + ' says', { body: msg.text, icon: msg.sender.avatar });
-        setTimeout(n.close.bind(n), 4000);
+
+    this.messageService.onMessage().subscribe(msg => this.onMessage(msg));
+  }
+
+  private onMessage(msg) {
+    // normal flow, add to end of array
+    if (this.messages.length === 0 || msg.timestamp > this.messages[this.messages.length - 1].timestamp) {
+      this.messages.push(Object.assign({}, msg));
+    } else {
+      // historical message, maintain order by timestamp
+      for (let i = this.messages.length - 1; i >= 0; i++) {
+        const m = this.messages[i];
+        if (m.timestamp === msg.timestamp) {
+          return;
+        } else if (msg.timestamp > m.timestamp) {
+          this.messages.splice(i, 0, msg);
+          break;
+        }
       }
-      this.cdRef.detectChanges();
-    });
+    }
+    // notify if recent
+    if (msg.timestamp > Date.now() - 10_000 && this.notify) {
+      const n = new Notification(msg.sender.name + ' says', { body: msg.text, icon: msg.sender.avatar });
+      setTimeout(n.close.bind(n), 4000);
+    }
+    // truncate to limit
+    if (this.messages.length > MESSAGE_LIMIT) {
+      this.messages.splice(0, this.messages.length - MESSAGE_LIMIT);
+    }
+    // save for later
+    setTimeout(() => {
+      localStorage.setItem('messages/' + this.channel, JSON.stringify(this.messages));
+    }, 500);
+
+    this.cdRef.detectChanges();
   }
 
   send() {

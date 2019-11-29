@@ -22,6 +22,7 @@ export class MessageService {
   messages: Subject<Message>;
   joins: Subject<User>;
   drops: Subject<string>;
+  asks: Subject<boolean>;
   socketService: SocketService;
   socketSubject: Subject<any>;
 
@@ -34,6 +35,7 @@ export class MessageService {
     this.messages = new Subject<Message>();
     this.joins = new Subject<User>();
     this.drops = new Subject<string>();
+    this.asks = new Subject<boolean>();
     this.socketService = new SocketService();
     this.messageFilters = [imgFilter, gifFilter, linkFilter];
   }
@@ -74,6 +76,7 @@ export class MessageService {
             this.socketSubject.next('OFFER ' + this.userId + ' ' + btoa(JSON.stringify(this.channelCallback.desc)));
           });
           this.joins.next(payload.user);
+          this.asks.next(true);
           break;
         case 'BYE':
           this.drops.next(userId);
@@ -109,6 +112,16 @@ export class MessageService {
     message.text = txt;
 
     this.messages.next(message);
+    this.sendToPeers(message);
+  }
+
+  sendAll(messages: Array<Message>) {
+    for (const msg of messages) {
+      this.sendToPeers(msg);
+    }
+  }
+
+  private sendToPeers(message: Message) {
     if (this.hasNoOpenChannels()) {
       this.socketSubject.next('TALK ' + this.userId + ' ' + btoa(JSON.stringify(message)));
       this.channels.forEach(channel => channel.send(JSON.stringify(message)));
@@ -131,6 +144,10 @@ export class MessageService {
 
   onDrop(): Observable<string> {
     return this.drops;
+  }
+
+  onAsk(): Observable<boolean> {
+    return this.asks;
   }
 
 }
